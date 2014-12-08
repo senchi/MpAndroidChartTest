@@ -18,14 +18,17 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.utils.ValueFormatter;
 import com.github.mikephil.charting.utils.XLabels;
 import com.github.mikephil.charting.utils.YLabels;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Handles the Line Chart GUI
@@ -34,9 +37,10 @@ public class LineChartFragment extends Fragment{
 
     private static final String TAG = LineChartFragment.class.getSimpleName();
 
-    private static String SAMPLE_JSON = null;
+    // public Gson instance
+    private final Gson GSON = new GsonBuilder().create();
 
-    private SimpleDateFormat mSdfDate = App.getChartDateFormat();
+    private static String SAMPLE_JSON = null;
 
     public static LineChartFragment newInstance(){
         LineChartFragment fragment = new LineChartFragment();
@@ -90,13 +94,13 @@ public class LineChartFragment extends Fragment{
         xLabels.setPosition(XLabels.XLabelPosition.BOTTOM);
 //        xLabels.setCenterXLabelText(true);
 //        xLabels.setSpaceBetweenLabels(4);
-        xLabels.setTextSize(chartLabelSize);
+//        xLabels.setTextSize(chartLabelSize);
         xLabels.setAvoidFirstLastClipping(true);
 
         YLabels yLabels = mChart.getYLabels();
         yLabels.setLabelCount(8);
         yLabels.setDrawTopYLabelEntry(true);
-        yLabels.setPosition(YLabels.YLabelPosition.BOTH_SIDED);
+        yLabels.setPosition(YLabels.YLabelPosition.LEFT);
         yLabels.setTextSize(chartLabelSize);
         yLabels.setFormatter(new ValueFormatter() {
             @Override
@@ -116,7 +120,7 @@ public class LineChartFragment extends Fragment{
 
 
         Type typeOfT = new TypeToken<ArrayList<ArrayList<String>>>() {}.getType();
-        List<List<String>> dataList = new GsonBuilder().create().fromJson(SAMPLE_JSON, typeOfT);
+        List<List<String>> dataList = GSON.fromJson(SAMPLE_JSON, typeOfT);
 
         Date first = null;
         Date last = null;
@@ -136,7 +140,7 @@ public class LineChartFragment extends Fragment{
                 last = date;
             }
 
-            xValues.add(mSdfDate.format(date)); // converting from unix time
+            xValues.add(getChartDateFormat().format(date)); // converting from unix time
             yValues.add(new Entry(Float.parseFloat(entry.get(1)), i));
 
             i++;
@@ -157,7 +161,7 @@ public class LineChartFragment extends Fragment{
 //                            mChart.invalidate();
 
         TextView lastUpdated = (TextView) view.findViewById(R.id.last_updated);
-        lastUpdated.setText(String.format("%s - %s", App.getDateFormat().format(first), App.getDateFormat().format(last)));
+        lastUpdated.setText(String.format("%s - %s", getDateFormat().format(first), getDateFormat().format(last)));
 
         return view;
     }
@@ -176,6 +180,14 @@ public class LineChartFragment extends Fragment{
                 labelSizePx = 9;
         }
         return labelSizePx;
+    }
+
+    // gui date/time display format
+    public static DateFormat getDateFormat(){
+        return  DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault());
+    }
+    public static SimpleDateFormat getChartDateFormat(){
+        return new SimpleDateFormat("MMM dd", Locale.getDefault());
     }
 
 }
